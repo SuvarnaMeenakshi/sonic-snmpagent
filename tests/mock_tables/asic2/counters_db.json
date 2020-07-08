@@ -617,10 +617,6 @@
     "Ethernet-BP24": "oid:0x1000000000015",
     "Ethernet-BP28": "oid:0x1000000000016"
   },
-  "COUNTERS_LAG_NAME_MAP": {
-    "PortChannel03": "oid:0x1000000000017",
-    "PortChannel04": "oid:0x1000000000018"
-  },
   "COUNTERS_QUEUE_NAME_MAP": {
     "Ethernet-BP16:0":  "oid:0x15000000000330",
     "Ethernet-BP16:1":  "oid:0x15000000000331",

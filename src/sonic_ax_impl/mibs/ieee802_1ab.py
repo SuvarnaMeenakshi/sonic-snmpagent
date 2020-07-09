@@ -199,7 +199,8 @@ class LocPortUpdater(MIBUpdater):
         else:
             return None
 
-        return Namespace.dbs_get_all(self.db_conn, db, if_table, blocking=True)
+        Namespace.connect_all_dbs(self.db_conn, db)
+        return Namespace.dbs_get_all(self.db_conn, db, if_table)
 
     def update_interface_data(self, if_name):
         """
@@ -426,6 +427,7 @@ class LLDPRemTableUpdater(MIBUpdater):
         self.if_range = []
         self.lldp_counters = {}
         for if_oid, if_name in self.oid_name_map.items():
+            Namespace.connect_all_dbs(self.db_conn, mibs.APPL_DB)
             lldp_kvs = Namespace.dbs_get_all(self.db_conn, mibs.APPL_DB, mibs.lldp_entry_table(if_name))
             if not lldp_kvs:
                 continue

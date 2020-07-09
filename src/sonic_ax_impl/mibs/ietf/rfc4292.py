@@ -48,7 +48,8 @@ class RouteUpdater(MIBUpdater):
             sub_id = ip2tuple_v4(loip) + (255, 255, 255, 255) + (self.tos,) + (0, 0, 0, 0)
             self.route_dest_list.append(sub_id)
             self.route_dest_map[sub_id] = self.loips[loip].packed
-
+ 
+        Namespace.connect_all_dbs(self.db_conn, mibs.APPL_DB)
         route_entries = Namespace.dbs_keys(self.db_conn, mibs.APPL_DB, "ROUTE_TABLE:*")
         if not route_entries:
             return

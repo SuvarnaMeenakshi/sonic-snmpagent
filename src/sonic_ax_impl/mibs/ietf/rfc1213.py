@@ -115,7 +115,7 @@ class NextHopUpdater(MIBUpdater):
             ipnstr = routestr[len("ROUTE_TABLE:"):]
             if ipnstr == "0.0.0.0/0":
                 ipn = ipaddress.ip_network(ipnstr)
-                ent = Namespace.dbs_get_all(self.db_conn, mibs.APPL_DB, routestr, blocking=True)
+                ent = Namespace.dbs_get_all(self.db_conn, mibs.APPL_DB, routestr)
                 nexthops = ent[b"nexthop"].decode()
                 for nh in nexthops.split(','):
                     # TODO: if ipn contains IP range, create more sub_id here
@@ -168,6 +168,7 @@ class InterfacesUpdater(MIBUpdater):
         self.if_id_map = {}
         self.oid_sai_map = {}
         self.oid_name_map = {}
+        self.if_oid_namespace = {}
 
     def reinit_data(self):
         """
@@ -177,7 +178,8 @@ class InterfacesUpdater(MIBUpdater):
         self.if_alias_map, \
         self.if_id_map, \
         self.oid_sai_map, \
-        self.oid_name_map, _ = Namespace.init_namespace_sync_d_interface_tables(self.db_conn)
+        self.oid_name_map, \
+        self.if_oid_namespace = Namespace.init_namespace_sync_d_interface_tables(self.db_conn)
         """
         db_conn - will have db_conn to all namespace DBs and
         global db. First db in the list is global db.
@@ -193,7 +195,7 @@ class InterfacesUpdater(MIBUpdater):
         """
         Namespace.connect_all_dbs(self.db_conn, mibs.COUNTERS_DB)
         self.if_counters = \
-            {if_idx: Namespace.dbs_get_all(self.db_conn, mibs.COUNTERS_DB, mibs.counter_table(self.oid_sai_map[if_idx]), blocking=True)
+            {if_idx: self.db_conn[self.if_oid_namespace[if_idx]].get_all(mibs.COUNTERS_DB, mibs.counter_table(self.oid_sai_map[if_idx]))
             for if_idx in self.oid_sai_map}
 
         self.lag_name_if_name_map, \
@@ -322,7 +324,7 @@ class InterfacesUpdater(MIBUpdater):
         else:
             return None
         Namespace.connect_all_dbs(self.db_conn, db)
-        return Namespace.dbs_get_all(self.db_conn, db, if_table, blocking=True)
+        return Namespace.dbs_get_all(self.db_conn, db, if_table)
 
     def _get_if_entry_state_db(self, sub_id):
         """
@@ -342,7 +344,7 @@ class InterfacesUpdater(MIBUpdater):
             return None
 
         Namespace.connect_all_dbs(self.db_conn, db)
-        return Namespace.dbs_get_all(self.db_conn, db, if_table, blocking=False)
+        return Namespace.dbs_get_all(self.db_conn, db, if_table)
 
     def _get_status(self, sub_id, key):
         """

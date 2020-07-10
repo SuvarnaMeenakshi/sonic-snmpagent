@@ -25,6 +25,8 @@ SNMP_OVERLAY_DB = 'SNMP_OVERLAY_DB'
 TABLE_NAME_SEPARATOR_COLON = ':'
 TABLE_NAME_SEPARATOR_VBAR = '|'
 
+HOST_DB_NS = ""
+
 # This is used in both rfc2737 and rfc3433
 SENSOR_PART_ID_MAP = {
     "temperature":  1,
@@ -165,6 +167,12 @@ def config(**kwargs):
     global redis_kwargs
     redis_kwargs = {k:v for (k,v) in kwargs.items() if k in ['unix_socket_path', 'host', 'port']}
 
+def get_sai_id_key(namespace, sai_id):
+    return str(namespace) + ':' + sai_id.decode()
+
+def split_sai_id_key(sai_id_key):
+    return sai_id_key.split(':')[0], sai_id_key.split(':')[1].encode()
+
 def init_db():
     """
     Connects to DB
@@ -221,7 +229,8 @@ def init_sync_d_interface_tables(db_conn):
     if_name_map = {if_name: sai_id for if_name, sai_id in if_name_map.items() if \
                    (re.match(port_util.SONIC_ETHERNET_RE_PATTERN, if_name.decode()) or \
                     re.match(port_util.SONIC_ETHERNET_BP_RE_PATTERN, if_name.decode()))}
-    if_id_map = {sai_id: if_name for sai_id, if_name in if_id_map.items() if \
+    # sai_id_key = namespace : sai_id
+    if_id_map = {get_sai_id_key(db_conn.namespace, sai_id) : if_name for sai_id, if_name in if_id_map.items() if \
                  (re.match(port_util.SONIC_ETHERNET_RE_PATTERN, if_name.decode()) or \
                   re.match(port_util.SONIC_ETHERNET_BP_RE_PATTERN, if_name.decode()))}
     logger.debug("Port name map:\n" + pprint.pformat(if_name_map, indent=2))
@@ -373,7 +382,7 @@ def init_sync_d_queue_tables(db_conn):
 
     # Parse the queue_name_map and create the following maps:
     # port_queues_map -> {"if_index : queue_index" : sai_oid}
-    # queue_stat_map -> {queue stat table name : {counter name : value}}
+    # queue_stat_map -> {namespace:queue stat table name : {counter name : value}}
     # port_queue_list_map -> {if_index: [sorted queue list]}
     port_queues_map = {}
     queue_stat_map = {}
@@ -389,7 +398,8 @@ def init_sync_d_queue_tables(db_conn):
         queue_stat_name = queue_table(sai_id)
         queue_stat = db_conn.get_all(COUNTERS_DB, queue_stat_name, blocking=False)
         if queue_stat is not None:
-            queue_stat_map[queue_stat_name] = queue_stat
+            queue_stat_name_key = get_sai_id_key(db_conn.namespace, queue_stat_name)
+            queue_stat_map[queue_stat_name_key] = queue_stat
 
         if not port_queue_list_map.get(int(port_index)):
             port_queue_list_map[int(port_index)] = [int(queue_index)]
@@ -520,17 +530,17 @@ class RedisOidTreeUpdater(MIBUpdater):
 class Namespace:
     @staticmethod
     def init_namespace_dbs():
-        db_conn= []
+        db_conn= {}
         SonicDBConfig.load_sonic_global_db_config()
         for namespace in SonicDBConfig.get_ns_list():
             db = SonicV2Connector(use_unix_socket_path=True, namespace=namespace)
-            db_conn.append(db)
+            db_conn[db.namespace] = db
 
         return db_conn
 
     @staticmethod
     def connect_all_dbs(dbs, db_name):
-        for db_conn in dbs:
+        for _, db_conn in dbs.items():
             db_conn.connect(db_name)
 
     @staticmethod
@@ -552,7 +562,7 @@ class Namespace:
         db get_all function executed on global and all namespace DBs.
         """
         result = {}
-        for db_conn in dbs:
+        for _, db_conn in dbs.items():
             ns_result = db_conn.get_all(db_name, _hash, blocking=False)
             if ns_result is not None:
                 result.update(ns_result)
@@ -572,7 +582,6 @@ class Namespace:
         else:
             return dbs[1:]
         
-
     @staticmethod
     def init_namespace_sync_d_interface_tables(dbs):
         if_name_map = {}
@@ -587,7 +596,9 @@ class Namespace:
         Ignore first global db to get interface tables if there
         are multiple namespaces.
         """
-        for db_conn in Namespace.get_non_host_dbs(dbs):
+        for namespace, db_conn in dbs.items():
+            if len(dbs) > 1 and namespace == "":
+                continue
             if_name_map_ns, \
             if_alias_map_ns, \
             if_id_map_ns, \
@@ -615,7 +626,7 @@ class Namespace:
         Ignore first global db to get lag tables if
         there are multiple namespaces.
         """
-        for db_conn in Namespace.get_non_host_dbs(dbs):
+        for namespace, db_conn in dbs.items():
             lag_name_if_name_map_ns, \
             if_name_lag_name_map_ns, \
             oid_lag_name_map_ns, \
@@ -668,7 +679,9 @@ class Namespace:
         Ignore first global db to get queue tables if there
         are multiple namespaces.
         """
-        for db_conn in Namespace.get_non_host_dbs(dbs):
+        for db_conn in dbs:
+            if len(dbs) > 0 and db_conn.namespace == "":
+                continue
             port_queues_map_ns, \
             queue_stat_map_ns, \
             port_queue_list_map_ns = init_sync_d_queue_tables(db_conn)

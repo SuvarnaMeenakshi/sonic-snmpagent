@@ -117,7 +117,7 @@ class NextHopUpdater(MIBUpdater):
             ipnstr = routestr[len("ROUTE_TABLE:"):]
             if ipnstr == "0.0.0.0/0":
                 ipn = ipaddress.ip_network(ipnstr)
-                ent = Namespace.dbs_get_all(self.db_conn, mibs.APPL_DB, routestr, blocking=True)
+                ent = Namespace.dbs_get_all(self.db_conn, mibs.APPL_DB, routestr)
                 nexthops = ent[b"nexthop"].decode()
                 for nh in nexthops.split(','):
                     # TODO: if ipn contains IP range, create more sub_id here
@@ -208,13 +208,19 @@ class InterfacesUpdater(MIBUpdater):
         """
         Namespace.connect_all_dbs(self.db_conn, mibs.COUNTERS_DB)
         self.if_counters = \
-            {sai_id: Namespace.dbs_get_all(self.db_conn, mibs.COUNTERS_DB, mibs.counter_table(sai_id), blocking=True)
+            {sai_id: Namespace.dbs_get_all(self.db_conn, mibs.COUNTERS_DB, mibs.counter_table(sai_id))
             for sai_id in self.if_id_map}
+
+        for sai_id in self.if_id_map:
+            namespace = sai_id_key.split(":")[0]
+            sai_id = sai_id_key.split(":")[1]
+            self.if_counters[] = self.db_conn[namespace].get_all(
+
 
         rif_sai_ids = list(self.rif_port_map) + list(self.vlan_name_map)
 
         self.rif_counters = \
-            {sai_id: Namespace.dbs_get_all(self.db_conn, mibs.COUNTERS_DB, mibs.counter_table(sai_id), blocking=True)
+            {sai_id: Namespace.dbs_get_all(self.db_conn, mibs.COUNTERS_DB, mibs.counter_table(sai_id))
              for sai_id in rif_sai_ids}
 
         if self.rif_counters: 
@@ -388,7 +394,7 @@ class InterfacesUpdater(MIBUpdater):
         else:
             return None
         Namespace.connect_all_dbs(self.db_conn, db)
-        return Namespace.dbs_get_all(self.db_conn, db, if_table, blocking=True)
+        return Namespace.dbs_get_all(self.db_conn, db, if_table)
 
     def _get_if_entry_state_db(self, sub_id):
         """
@@ -407,7 +413,7 @@ class InterfacesUpdater(MIBUpdater):
         else:
             return None
 
-        return Namespace.dbs_get_all(self.db_conn, db, if_table, blocking=False)
+        return Namespace.dbs_get_all(self.db_conn, db, if_table)
 
     def _get_status(self, sub_id, key):
         """

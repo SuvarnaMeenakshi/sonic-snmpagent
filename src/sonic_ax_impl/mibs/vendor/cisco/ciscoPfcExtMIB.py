@@ -47,7 +47,7 @@ class PfcUpdater(MIBUpdater):
         """
         Namespace.connect_all_dbs(self.db_conn, mibs.COUNTERS_DB)
         self.if_counters = \
-            {sai_id: Namespace.dbs_get_all(self.db_conn, mibs.COUNTERS_DB, mibs.counter_table(sai_id), blocking=True)
+            {sai_id: Namespace.dbs_get_all(self.db_conn, mibs.COUNTERS_DB, mibs.counter_table(sai_id))
              for sai_id in self.if_id_map}
 
         self.lag_name_if_name_map, \

@@ -11,7 +11,7 @@ import sys
 import ax_interface
 from sonic_ax_impl.mibs import ieee802_1ab
 from . import logger
-from .mibs.ietf import rfc1213, rfc2737, rfc2863, rfc3433, rfc4292, rfc4363
+from .mibs.ietf import rfc1213, rfc2737, rfc2863, rfc3433, rfc4292, rfc4363, rfc1214
 from .mibs.vendor import dell, cisco
 
 # Background task update frequency ( in seconds )

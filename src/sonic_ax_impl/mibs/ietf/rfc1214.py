@@ -7,7 +7,7 @@ class sysNameUpdater(MIBUpdater):
         super().__init__()
         self.db_conn = mibs.init_db()
 
-    def update_data():
+    def update_data(self):
         return
 
     def get_sys_name(self):
@@ -18,10 +18,10 @@ class sysNameUpdater(MIBUpdater):
 
         device_metadata = self.db_conn.get_all(self.db_conn.CONFIG_DB, "DEVICE_METADATA|localhost")
 
-        if device_metadata is not None and b'hostname' in device_metadata:
+        if device_metadata is not None and 'hostname' in device_metadata:
              return str(device_metadata['hostname'])
         else:
-             return ""
+             return None
 
 
 class SysName(metaclass=MIBMeta, prefix='.1.3.6.1.2.1.1.5'):

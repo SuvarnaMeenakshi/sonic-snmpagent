@@ -17,6 +17,6 @@
   },
   "DEVICE_METADATA|localhost": {
     "chassis_serial_number": "SAMPLETESTSN",
-    "hostname" : "test_hostname"
+    "hostname" : "namespace_hostname"
    }
 }

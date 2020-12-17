@@ -24,11 +24,10 @@ class sysNameUpdater(MIBUpdater):
              return None
 
 
-class SysName(metaclass=MIBMeta, prefix='.1.3.6.1.2.1.1.5'):
+class SysNameMIB(metaclass=MIBMeta, prefix='.1.3.6.1.2.1.1.5'):
     """
 
     """
     updater = sysNameUpdater()
 
-    # S-Series CPU utilization in percentage for last 5 seconds
     sysName = MIBEntry('0', ValueType.OCTET_STRING, updater.get_sys_name)

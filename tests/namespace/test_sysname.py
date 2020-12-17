@@ -17,7 +17,7 @@ class TestGetNextPDU(TestCase):
     def setUpClass(cls):
         tests.mock_tables.dbconnector.load_namespace_config()
         importlib.reload(rfc1214)
-        cls.lut = MIBTable(rfc1214.SysName)
+        cls.lut = MIBTable(rfc1214.SysNameMIB)
 
     def test_getpdu_sysname(self):
         oid = ObjectIdentifier(9, 0, 0, 0, (1, 3, 6, 1, 2, 1, 1, 5, 0))

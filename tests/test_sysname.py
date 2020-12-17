@@ -15,7 +15,7 @@ from sonic_ax_impl.mibs.ietf import rfc1214
 class TestGetNextPDU(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.lut = MIBTable(rfc1214.SysName)
+        cls.lut = MIBTable(rfc1214.SysNameMIB)
 
     def test_getpdu_sysname(self):
         oid = ObjectIdentifier(9, 0, 0, 0, (1, 3, 6, 1, 2, 1, 1, 5, 0))

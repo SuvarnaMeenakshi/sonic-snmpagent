@@ -11,7 +11,7 @@ import sys
 import ax_interface
 from sonic_ax_impl.mibs import ieee802_1ab, Namespace
 from . import logger
-from .mibs.ietf import rfc1213, rfc2737, rfc2863, rfc3433, rfc4292, rfc4363
+from .mibs.ietf import rfc1213, rfc2737, rfc2863, rfc3433, rfc4363
 from .mibs.vendor import dell, cisco
 
 # Background task update frequency ( in seconds )
@@ -29,7 +29,6 @@ class SonicMIB(
     rfc3433.PhysicalSensorTableMIB,
     rfc2863.InterfaceMIBObjects,
     rfc4363.QBridgeMIBObjects,
-    rfc4292.IpCidrRouteTable,
     ieee802_1ab.LLDPLocalSystemData,
     ieee802_1ab.LLDPLocalSystemData.LLDPLocPortTable,
     ieee802_1ab.LLDPLocalSystemData.LLDPLocManAddrTable,
